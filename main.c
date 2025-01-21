@@ -13,7 +13,7 @@
 // pthread_mutex_t mx;
 // pthread_cond_t cond;
 
-int N = 1;
+int N = 2;
 
 typedef struct routineArg
 {
@@ -27,7 +27,12 @@ void *userRoutine(void *_rou_arg){
     void *msg = rou_arg.msg;
 
     pthread_t pthid = pthread_self();
+    printf("========================================\n");
     printf("Thread %d = %ld\n", gettid(), pthid);
+    printf("Message = %s\n", (char *)msg);
+    printf("Message Address = %p\n", msg);
+    printf("========================================\n");
+
 
     // 1
     printQueue((TQueue*)queue);
@@ -45,7 +50,7 @@ void *userRoutine(void *_rou_arg){
     printQueue((TQueue*)queue);
 
     // last
-    sleep(5);
+    sleep(3);
 
     return NULL;
 }
@@ -66,13 +71,19 @@ int main()
     int qsize = 5;
     TQueue *queue = createQueue(qsize);
 
-    routineArg rou_arg1 = {queue, msg1};
+    routineArg rou_arg[N];
+    for (int i = 0; i < N; i++){
+        rou_arg[i].queue = queue;
+        rou_arg[i].msg = msg1;
+    }
+
+    rou_arg[1].msg = msg2;
 
     // pthread_mutex_init(&mx, NULL);
     // pthread_cond_init(&cond, NULL);
     for (int i = 0; i < N; i++)
     {
-        pthread_create(&th[i], NULL, userRoutine, (void *)&rou_arg1);
+        pthread_create(&th[i], NULL, userRoutine, (void *)&rou_arg[i]);
         usleep(1000000);
     }
 
