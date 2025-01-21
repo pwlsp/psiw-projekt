@@ -2,6 +2,10 @@
 
 void printQueue(TQueue *queue) // ADDITIONAL
 {
+    if(queue == NULL){
+        return;
+    }
+
     printf("Printing TQueue variables:\n");
     printf("\tsize        -->\t%d\n", queue->size);
     printf("\thead        -->\t%p\n", queue->head);
@@ -49,12 +53,20 @@ TQueue *createQueue(int size)
 
 void destroyQueue(TQueue *queue)
 {
+    if(queue == NULL){
+        return;
+    }
+
     free((void *)queue->subscribers);
     free((void *)queue);
 }
 
 void subscribe(TQueue *queue, pthread_t thread) // READY
 {
+    if(queue == NULL){
+        return;
+    }
+
     int already_there = 0;
     for (int i = 0; i < queue->subs_count; i++)
     {
@@ -80,6 +92,10 @@ void subscribe(TQueue *queue, pthread_t thread) // READY
 
 void unsubscribe(TQueue *queue, pthread_t thread)
 {
+    if(queue == NULL){
+        return;
+    }
+    
     int is_there = 0;
     for (int i = 0; i < queue->subs_count; i++)
     {
@@ -107,12 +123,15 @@ void unsubscribe(TQueue *queue, pthread_t thread)
 
 void addMsg(TQueue *queue, void *msg)
 {
+    if(queue == NULL){
+        return;
+    }
+
     if (queue->elems_count >= queue->size) // Change it into locking later [ ]
     {
         printf("Not enough space.\n");
         return;
     }
-
     TQElement *element = (TQElement *)malloc(sizeof(TQElement));
     if (element == NULL)
     {
@@ -138,11 +157,13 @@ void addMsg(TQueue *queue, void *msg)
 
     element->next = NULL;
 
-    queue->tail->next = element;
-
-    queue->tail = element;
-
-    if(queue->size == 0){
+    if(queue->elems_count == 0){
         queue->head = element;
     }
+    else{   
+        queue->tail->next = element;
+    }
+    queue->tail = element;
+
+    queue->elems_count += 1;
 }
