@@ -13,44 +13,58 @@
 // pthread_mutex_t mx;
 // pthread_cond_t cond;
 
-int N = 2;
+int N = 1;
 
 typedef struct routineArg
 {
+    int num;
     TQueue *queue;
-    void *msg;
+    void *msg1, *msg2;
 } routineArg;
 
 void *userRoutine(void *_rou_arg){
     routineArg rou_arg = *(routineArg *)_rou_arg;
+    int num = rou_arg.num;
     TQueue *queue = rou_arg.queue;
-    void *msg = rou_arg.msg;
+    void *msg1 = rou_arg.msg1;
+    void *msg2 = rou_arg.msg2;
 
     pthread_t pthid = pthread_self();
     printf("========================================\n");
     printf("Thread %d = %ld\n", gettid(), pthid);
-    printf("Message = %s\n", (char *)msg);
-    printf("Message Address = %p\n", msg);
-    printf("========================================\n");
+    printf("num = %d\n", num);
+    printf("msg1 = %s\n", (char *)msg1);
+    printf("msg2 = %s\n", (char *)msg2);
+    printf("Message address = %p\n", msg1);
+    printf("========================================\n\n");
 
 
-    // 1
-    printQueue((TQueue*)queue);
+    printQueue(queue);
+    addMsg(queue, msg1);
+    addMsg(queue, msg1);
+    addMsg(queue, msg1);
+    addMsg(queue, msg1);
+    addMsg(queue, msg1);
+    addMsg(queue, msg1);
+    if(num == 1) addMsg(queue, msg2);
+    else addMsg(queue, msg1);
 
-    // 2
-    addMsg(queue, msg);
+    printQueue(queue);
 
-    // 3
-    printQueue((TQueue*)queue);
+    subscribe(queue, pthid);
 
-    // 4
-    addMsg(queue, msg);
+    if(num == 1) addMsg(queue, msg1);
+    else addMsg(queue, msg2);
 
-    // 5
-    printQueue((TQueue*)queue);
+    printQueue(queue);
 
-    // last
-    sleep(3);
+    if(num == 2)
+    {
+        removeMsg(queue, msg1);
+        printQueue(queue);
+    }
+
+    sleep(2);
 
     return NULL;
 }
@@ -63,7 +77,7 @@ int main()
 
     strcpy((char *)msg1, "elo");
     strcpy((char *)msg2, "makrela");
-    strcpy((char *)msg3, "kurs robi");
+    strcpy((char *)msg3, "kurs");
 
     // Initializing threads, mutexes and condition variables
     pthread_t th[N];
@@ -73,11 +87,11 @@ int main()
 
     routineArg rou_arg[N];
     for (int i = 0; i < N; i++){
+        rou_arg[i].num = i + 1;
         rou_arg[i].queue = queue;
-        rou_arg[i].msg = msg1;
+        rou_arg[i].msg1 = msg1;
+        rou_arg[i].msg2 = msg2;
     }
-
-    rou_arg[1].msg = msg2;
 
     // pthread_mutex_init(&mx, NULL);
     // pthread_cond_init(&cond, NULL);

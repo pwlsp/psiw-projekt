@@ -18,7 +18,7 @@ extern int N;
 typedef struct TQElement
 {
     void *msg;
-    int addr_size;
+    int addr_count;
     pthread_t *addressees;
     struct TQElement *next;
 } TQElement;
@@ -26,14 +26,19 @@ typedef struct TQElement
 typedef struct TQueue
 {
     int size;
-    int elems_count;
+    int msgs_count;
     int subs_count;
+    int subs_size;
     TQElement *head;
     TQElement *tail;
     pthread_t *subscribers;
 } TQueue;
 
 // Declarations:
+
+void printAddressees(TQElement *element);
+
+void printMsgs(TQueue *queue);
 
 void printQueue(TQueue *queue);
 
