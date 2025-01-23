@@ -19,7 +19,7 @@ typedef struct routineArg
 {
     int num;
     TQueue *queue;
-    void *msg1, *msg2;
+    void *msg1, *msg2, *msg3;
 } routineArg;
 
 void *userRoutine(void *_rou_arg)
@@ -29,6 +29,7 @@ void *userRoutine(void *_rou_arg)
     TQueue *queue = rou_arg.queue;
     void *msg1 = rou_arg.msg1;
     void *msg2 = rou_arg.msg2;
+    void *msg3 = rou_arg.msg3;
 
     pthread_t myThreadID = pthread_self();
     printf("========================================\n");
@@ -36,43 +37,53 @@ void *userRoutine(void *_rou_arg)
     printf("num = %d\n", num);
     printf("msg1 = %s\n", (char *)msg1);
     printf("msg2 = %s\n", (char *)msg2);
-    printf("Message address = %p\n", msg1);
+    printf("msg3 = %s\n", (char *)msg3);
+    printf("msg1 address = %p\n", msg1);
+    printf("msg2 address = %p\n", msg1);
+    printf("msg3 address = %p\n", msg1);
     printf("========================================\n\n");
 
     if (num == 1)
     {
-        addMsg(queue, msg1);
+        // printf("available messages: %d\n", getAvailable(queue, myThreadID));
+
         printQueue(queue);
 
         subscribe(queue, myThreadID);
+
+        sleep(2);
+
+        printf("========================================\n");
+        printf("Thread %d = %ld\n", gettid(), myThreadID);
+        printf("========================================\n\n");
+
         printQueue(queue);
 
-        addMsg(queue, msg1);
+        void *pt = getMsg(queue, myThreadID);
+        printf("Getting message... : %p : ", pt);
+        if(pt != NULL)
+        {
+            printf("%s", (char *)pt);
+        }
+        printf("\n");
+
         printQueue(queue);
-        
-        sleep(2);
+
+        sleep(1);
     }
 
     else if (num == 2)
     {
-        addMsg(queue, msg2);
         printQueue(queue);
+
+        addMsg(queue, msg2);
+        addMsg(queue, msg3);
 
         subscribe(queue, myThreadID);
-        printQueue(queue);
+        addMsg(queue, msg1);
 
-        addMsg(queue, msg2);
-        addMsg(queue, msg2);
-        addMsg(queue, msg2);
-        addMsg(queue, msg2);
-        addMsg(queue, msg2);
-        printQueue(queue);
 
-        unsubscribe(queue, queue->subscribers[1]);
-        printQueue(queue);
-        unsubscribe(queue, queue->subscribers[0]);
-        printQueue(queue);
-        
+
         sleep(2);
     }
 
@@ -102,6 +113,7 @@ int main()
         rou_arg[i].queue = queue;
         rou_arg[i].msg1 = msg1;
         rou_arg[i].msg2 = msg2;
+        rou_arg[i].msg3 = msg3;
     }
 
     // pthread_mutex_init(&mx, NULL);

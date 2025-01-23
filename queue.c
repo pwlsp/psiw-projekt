@@ -161,7 +161,7 @@ void subscribe(TQueue *queue, pthread_t thread) // seems READY bez zamków
     }
 }
 
-void unsubscribe(TQueue *queue, pthread_t thread)
+void unsubscribe(TQueue *queue, pthread_t thread) // co jeżeli msg straci wszystkich adresatów!
 {
     if (queue == NULL)
     {
@@ -219,7 +219,7 @@ void unsubscribe(TQueue *queue, pthread_t thread)
     }
 }
 
-void addMsg(TQueue *queue, void *msg) // seems READY bez zamków
+void addMsg(TQueue *queue, void *msg) // seems READY bez zamków i waitowania
 {
     if (queue == NULL)
     {
@@ -270,8 +270,98 @@ void addMsg(TQueue *queue, void *msg) // seems READY bez zamków
     queue->msgs_count += 1;
 }
 
+void* getMsg(TQueue *queue, pthread_t thread)
+{
+    if (queue == NULL)
+    {
+        return NULL;
+    }
+
+    int is_subscribed = 0;
+    for (int i = 0; i < queue->subs_count; i++)
+    {
+        if (queue->subscribers[i] == thread)
+        {
+            is_subscribed = 1;
+            break;
+        }
+    }
+
+    if (is_subscribed == 0) // If the thread is not subscribed - return NULL and quit
+    {
+        return NULL;
+    }
+
+    TQElement *element = queue->head;
+
+    while (element != NULL)
+    {
+        int is_addressee = 0;
+        void *msg = element->msg;
+
+        for (int i = 0; i < element->addr_count; i++)
+        {
+            if (element->addressees[i] == thread)
+            {
+                is_addressee = 1;
+            }
+
+            if (is_addressee && i < element->addr_count - 1)
+            {
+                element->addressees[i] = element->addressees[i + 1];
+            }
+        }
+
+        if (is_addressee)
+        {
+            element->addressees[element->addr_count - 1] = 0;
+            --element->addr_count;
+
+            if(element->addr_count == 0)
+            {
+                removeMsg(queue, msg);
+            }
+
+            return msg;
+        }
+    }
+
+    return NULL;
+}
+
+int getAvailable(TQueue *queue, pthread_t thread) // seems READY bez zamków
+{
+    if (queue == NULL)
+    {
+        return -1;
+    }
+
+    int available = 0;
+    TQElement *element = queue->head;
+
+    while (element != NULL)
+    {
+        for (int i = 0; i < element->addr_count; i++)
+        {
+            if (element->addressees[i] == thread)
+            {
+                ++available;
+            }
+        }
+
+        element = element->next;
+    }
+
+    return available;
+}
+
 void removeMsg(TQueue *queue, void *msg) // seems READY bez zamków
 {
+    if (queue == NULL)
+    {
+        return;
+    }
+
     if (queue->msgs_count <= 0) // If the queue is empty
     {
         return;
