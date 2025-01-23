@@ -19,6 +19,7 @@ typedef struct TQElement
 {
     void *msg;
     int addr_count;
+    int addr_size;
     pthread_t *addressees;
     struct TQElement *next;
 } TQElement;

@@ -1,6 +1,6 @@
 #include "queue.h"
 
-// Not freed objects in all cases yet:
+// Objects not freed in all cases yet:
 
 void printAddressees(TQElement *element) // ADDITIONAL Prints addressees as a list
 {
@@ -12,11 +12,8 @@ void printAddressees(TQElement *element) // ADDITIONAL Prints addressees as a li
 
     if (element->addr_count == 0)
     {
-        printf("0 addressees");
         return;
     }
-
-    printf("%d addressees: ", element->addr_count);
 
     for (int i = 0; i < element->addr_count; i++)
     {
@@ -37,7 +34,7 @@ void printMsgs(TQueue *queue) // ADDITIONAL Prints messages in the printQueue fo
     printf("\n");
     for (int i = 0; i < queue->msgs_count; i++)
     {
-        printf("\t\t%d. \"%s\"\tsent to ", i + 1, (char *)pt->msg);
+        printf("\t\t%d. \"%s\"\taddr_size = %d, addr_count = %d, addressees: ", i + 1, (char *)pt->msg, pt->addr_size, pt->addr_count);
         printAddressees(pt);
         printf("\n");
         pt = pt->next;
@@ -57,9 +54,9 @@ void printQueue(TQueue *queue) // ADDITIONAL
     printf("\tsize        -->\t%d\n", queue->size);
     printf("\thead        -->\t%p\n", queue->head);
     printf("\ttail        -->\t%p\n", queue->tail);
+    printf("\tsubs_size  -->\t%d\n", queue->subs_size);
     printf("\tsubs_count  -->\t%d\n", queue->subs_count);
-    printf("\tmsgs_count  -->\t%d\n", queue->msgs_count);
-
+    
     printf("\tsubscribers -->\t");
     for (int i = 0; i < queue->subs_count; i++)
     {
@@ -72,11 +69,12 @@ void printQueue(TQueue *queue) // ADDITIONAL
     }
     printf("\n");
 
+    printf("\tmsgs_count  -->\t%d\n", queue->msgs_count);
     printf("\tmessages    -->\n");
     printMsgs(queue);
 }
 
-TQueue *createQueue(int size) // subscribers jest źle (rozmiar)
+TQueue *createQueue(int size) // seems READY bez zamków
 {
     TQueue *queue = (TQueue *)malloc(sizeof(TQueue));
     if (queue == NULL)
@@ -84,7 +82,7 @@ TQueue *createQueue(int size) // subscribers jest źle (rozmiar)
         return NULL;
     }
     queue->size = size;
-    queue->subs_size = 10; // ZMIENIĆ TO TRZEBA!
+    queue->subs_size = 1;
     queue->msgs_count = 0;
     queue->subs_count = 0;
     queue->head = NULL;
@@ -102,7 +100,7 @@ TQueue *createQueue(int size) // subscribers jest źle (rozmiar)
     return queue;
 }
 
-void destroyQueue(TQueue *queue) // READY bez zamków
+void destroyQueue(TQueue *queue) // seems READY bez zamków
 {
     if (queue == NULL)
     {
@@ -123,7 +121,7 @@ void destroyQueue(TQueue *queue) // READY bez zamków
     free(queue);
 }
 
-void subscribe(TQueue *queue, pthread_t thread) // READY bez zamków
+void subscribe(TQueue *queue, pthread_t thread) // seems READY bez zamków
 {
     if (queue == NULL)
     {
@@ -142,8 +140,19 @@ void subscribe(TQueue *queue, pthread_t thread) // READY bez zamków
 
     if (!already_there)
     {
-        queue->subscribers[queue->subs_count] = thread;
-        ++(queue->subs_count);
+        if (queue->subs_count < queue->subs_size)
+        {
+            queue->subscribers[queue->subs_count] = thread;
+            ++queue->subs_count;
+        }
+        else // If the array is too small - realloc() with bigger size
+        {
+            queue->subscribers = realloc(queue->subscribers, queue->subs_size + 1);
+            ++queue->subs_size;
+
+            queue->subscribers[queue->subs_count] = thread;
+            ++queue->subs_count;
+        }
     }
 
     else
@@ -152,7 +161,7 @@ void subscribe(TQueue *queue, pthread_t thread) // READY bez zamków
     }
 }
 
-void unsubscribe(TQueue *queue, pthread_t thread) 
+void unsubscribe(TQueue *queue, pthread_t thread)
 {
     if (queue == NULL)
     {
@@ -174,8 +183,35 @@ void unsubscribe(TQueue *queue, pthread_t thread)
     }
     if (is_there)
     {
-        queue->subscribers[queue->subs_count] = 0;
-        --(queue->subs_count);
+        queue->subscribers[queue->subs_count - 1] = 0; // Removing last element from subscribers (either the one we should remove or a duplicate creating while shifting the array to the left)
+        --queue->subs_count;
+
+        TQElement *element = queue->head;
+        while (element != NULL) // Checking every element if it had the removed subscriber in its addressees
+        {
+            int is_there2 = 0;
+
+            for(int i = 0; i < element->addr_count; i++)
+            {
+                if (element->addressees[i] == thread)
+                {
+                    is_there2 = 1;
+                }
+
+                if (is_there2 && i < element->addr_count - 1)
+                {
+                    element->addressees[i] = element->addressees[i + 1];
+                }
+            }
+
+            if (is_there2)
+            {
+                element->addressees[element->addr_count - 1] = 0;
+                --element->addr_count;
+            }
+
+            element = element->next;
+        }
     }
     else
     {
@@ -183,7 +219,7 @@ void unsubscribe(TQueue *queue, pthread_t thread)
     }
 }
 
-void addMsg(TQueue *queue, void *msg) // READY bez zamków
+void addMsg(TQueue *queue, void *msg) // seems READY bez zamków
 {
     if (queue == NULL)
     {
@@ -202,6 +238,7 @@ void addMsg(TQueue *queue, void *msg) // READY bez zamków
         return;
     }
 
+    element->addr_size = queue->subs_count;
     element->addr_count = queue->subs_count;
 
     element->addressees = (pthread_t *)malloc(queue->subs_count * sizeof(pthread_t));
@@ -233,7 +270,7 @@ void addMsg(TQueue *queue, void *msg) // READY bez zamków
     queue->msgs_count += 1;
 }
 
-void removeMsg(TQueue *queue, void *msg) // READY bez zamków
+void removeMsg(TQueue *queue, void *msg) // seems READY bez zamków
 {
     if (queue->msgs_count <= 0) // If the queue is empty
     {

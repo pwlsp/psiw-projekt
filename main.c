@@ -13,7 +13,7 @@
 // pthread_mutex_t mx;
 // pthread_cond_t cond;
 
-int N = 1;
+int N = 2;
 
 typedef struct routineArg
 {
@@ -22,58 +22,68 @@ typedef struct routineArg
     void *msg1, *msg2;
 } routineArg;
 
-void *userRoutine(void *_rou_arg){
+void *userRoutine(void *_rou_arg)
+{
     routineArg rou_arg = *(routineArg *)_rou_arg;
     int num = rou_arg.num;
     TQueue *queue = rou_arg.queue;
     void *msg1 = rou_arg.msg1;
     void *msg2 = rou_arg.msg2;
 
-    pthread_t pthid = pthread_self();
+    pthread_t myThreadID = pthread_self();
     printf("========================================\n");
-    printf("Thread %d = %ld\n", gettid(), pthid);
+    printf("Thread %d = %ld\n", gettid(), myThreadID);
     printf("num = %d\n", num);
     printf("msg1 = %s\n", (char *)msg1);
     printf("msg2 = %s\n", (char *)msg2);
     printf("Message address = %p\n", msg1);
     printf("========================================\n\n");
 
-
-    printQueue(queue);
-    addMsg(queue, msg1);
-    addMsg(queue, msg1);
-    addMsg(queue, msg1);
-    addMsg(queue, msg1);
-    addMsg(queue, msg1);
-    addMsg(queue, msg1);
-    if(num == 1) addMsg(queue, msg2);
-    else addMsg(queue, msg1);
-
-    printQueue(queue);
-
-    subscribe(queue, pthid);
-
-    if(num == 1) addMsg(queue, msg1);
-    else addMsg(queue, msg2);
-
-    printQueue(queue);
-
-    if(num == 2)
+    if (num == 1)
     {
-        removeMsg(queue, msg1);
+        addMsg(queue, msg1);
         printQueue(queue);
+
+        subscribe(queue, myThreadID);
+        printQueue(queue);
+
+        addMsg(queue, msg1);
+        printQueue(queue);
+        
+        sleep(2);
     }
 
-    sleep(2);
+    else if (num == 2)
+    {
+        addMsg(queue, msg2);
+        printQueue(queue);
+
+        subscribe(queue, myThreadID);
+        printQueue(queue);
+
+        addMsg(queue, msg2);
+        addMsg(queue, msg2);
+        addMsg(queue, msg2);
+        addMsg(queue, msg2);
+        addMsg(queue, msg2);
+        printQueue(queue);
+
+        unsubscribe(queue, queue->subscribers[1]);
+        printQueue(queue);
+        unsubscribe(queue, queue->subscribers[0]);
+        printQueue(queue);
+        
+        sleep(2);
+    }
 
     return NULL;
 }
 
 int main()
 {
-    void *msg1 = (void *)malloc(16*sizeof(char));
-    void *msg2 = (void *)malloc(16*sizeof(char));
-    void *msg3 = (void *)malloc(16*sizeof(char));
+    void *msg1 = (void *)malloc(16 * sizeof(char));
+    void *msg2 = (void *)malloc(16 * sizeof(char));
+    void *msg3 = (void *)malloc(16 * sizeof(char));
 
     strcpy((char *)msg1, "elo");
     strcpy((char *)msg2, "makrela");
@@ -86,7 +96,8 @@ int main()
     TQueue *queue = createQueue(qsize);
 
     routineArg rou_arg[N];
-    for (int i = 0; i < N; i++){
+    for (int i = 0; i < N; i++)
+    {
         rou_arg[i].num = i + 1;
         rou_arg[i].queue = queue;
         rou_arg[i].msg1 = msg1;
