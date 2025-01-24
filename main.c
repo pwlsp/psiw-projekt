@@ -33,14 +33,14 @@ void *userRoutine(void *_rou_arg)
 
     pthread_t myThreadID = pthread_self();
     printf("========================================\n");
-    printf("Thread %d = %ld\n", gettid(), myThreadID);
-    printf("num = %d\n", num);
-    printf("msg1 = %s\n", (char *)msg1);
-    printf("msg2 = %s\n", (char *)msg2);
-    printf("msg3 = %s\n", (char *)msg3);
-    printf("msg1 address = %p\n", msg1);
-    printf("msg2 address = %p\n", msg1);
-    printf("msg3 address = %p\n", msg1);
+    printf("#  Thread %d = %ld\n", gettid(), myThreadID);
+    printf("#  num = %d\n", num);
+    printf("#  msg1 = %s\n", (char *)msg1);
+    printf("#  msg2 = %s\n", (char *)msg2);
+    printf("#  msg3 = %s\n", (char *)msg3);
+    printf("#  msg1 address = %p\n", msg1);
+    printf("#  msg2 address = %p\n", msg2);
+    printf("#  msg3 address = %p\n", msg3);
     printf("========================================\n\n");
 
     if (num == 1)
@@ -51,10 +51,30 @@ void *userRoutine(void *_rou_arg)
 
         subscribe(queue, myThreadID);
 
+        addMsg(queue, msg1);
+        addMsg(queue, msg2);
+        addMsg(queue, msg1);
+        addMsg(queue, msg2);
+        addMsg(queue, msg1);
+
+        printQueue(queue);
+
+        setSize(queue, 5);
+        addMsg(queue, msg1);
+        addMsg(queue, msg2);
+        addMsg(queue, msg1);
+
+        printQueue(queue);
+
+        getMsg(queue, myThreadID);
+        addMsg(queue, msg2);
+
+        printQueue(queue);
+
         sleep(2);
 
         printf("========================================\n");
-        printf("Thread %d = %ld\n", gettid(), myThreadID);
+        printf("#  Thread %d = %ld\n", gettid(), myThreadID);
         printf("========================================\n\n");
 
         printQueue(queue);
@@ -82,8 +102,6 @@ void *userRoutine(void *_rou_arg)
         subscribe(queue, myThreadID);
         addMsg(queue, msg1);
 
-
-
         sleep(2);
     }
 
@@ -103,7 +121,7 @@ int main()
     // Initializing threads, mutexes and condition variables
     pthread_t th[N];
 
-    int qsize = 5;
+    int qsize = 3;
     TQueue *queue = createQueue(qsize);
 
     routineArg rou_arg[N];

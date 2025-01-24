@@ -43,6 +43,8 @@ void printMsgs(TQueue *queue);
 
 void printQueue(TQueue *queue);
 
+void removeEveryMsg(TQueue *queue, void *msg);
+
 TQueue* createQueue(int size);
 
 void destroyQueue(TQueue *queue);

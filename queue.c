@@ -74,6 +74,61 @@ void printQueue(TQueue *queue) // ADDITIONAL
     printMsgs(queue);
 }
 
+void removeEveryMsg(TQueue *queue, void *msg) // seems READY bez zamków
+{
+    if (queue == NULL)
+    {
+        return;
+    }
+
+    if (queue->msgs_count <= 0) // If the queue is empty
+    {
+        return;
+    }
+
+    while (queue->head->msg == msg) // If the message is the head (or the head and the next message(s))
+    {
+        TQElement *oldHead = queue->head;
+        queue->head = queue->head->next;
+
+        free(oldHead->addressees);
+        free(oldHead);
+
+        --queue->msgs_count;
+
+        if (queue->msgs_count == 0) // Checking if the head was the only message and if the queue is empty now
+        {
+            queue->tail = NULL;
+            return;
+        }
+    }
+
+    TQElement *element = queue->head;
+
+    while (element->next != NULL)
+    {
+        if (element->next->msg == msg)
+        {
+            if (element->next == queue->tail) // Checking if we remove the last message
+            {
+                queue->tail = element;
+            }
+
+            TQElement *oldNext = element->next;
+            element->next = element->next->next;
+
+            free(oldNext->addressees);
+            free(oldNext);
+
+            --queue->msgs_count;
+
+            continue;
+        }
+
+        element = element->next;
+    }
+}
+
 TQueue *createQueue(int size) // seems READY bez zamków
 {
     TQueue *queue = (TQueue *)malloc(sizeof(TQueue));
@@ -367,7 +422,7 @@ void removeMsg(TQueue *queue, void *msg) // seems READY bez zamków
         return;
     }
 
-    while (queue->head->msg == msg) // If the message is the head (or the head and the next message(s))
+    if (queue->head->msg == msg) // If the message is the head
     {
         TQElement *oldHead = queue->head;
         queue->head = queue->head->next;
@@ -380,8 +435,8 @@ void removeMsg(TQueue *queue, void *msg) // seems READY bez zamków
         if (queue->msgs_count == 0) // Checking if the head was the only message and if the queue is empty now
         {
             queue->tail = NULL;
-            return;
         }
+        return;
     }
 
     TQElement *element = queue->head;
@@ -403,9 +458,43 @@ void removeMsg(TQueue *queue, void *msg) // seems READY bez zamków
 
             --queue->msgs_count;
 
-            continue;
+            return;
         }
 
         element = element->next;
+    }
+}
+
+void setSize(TQueue *queue, int size)
+{
+    if (size >= queue->msgs_count)
+    {
+        queue->size = size;
+        return;
+    }
+    else
+    {
+        queue->size = size;
+        TQElement *element = queue->head;
+
+        for(int i = 0; i < size - 1; i++)
+        {
+            element = element->next;
+        }
+
+        TQElement *next = element->next;
+        element->next = NULL;
+        element = next;
+
+        while (element != NULL)
+        {
+            next = element->next;
+            free(element->addressees);
+            free(element);
+
+            --queue->msgs_count;
+
+            element = next;
+        }
     }
 }
