@@ -1,7 +1,5 @@
 #include "queue.h"
 
-// Objects not freed in all cases yet:
-
 void printAddressees(TQElement *element) // ADDITIONAL Prints addressees as a list
 {
     if (element == NULL)
@@ -21,7 +19,7 @@ void printAddressees(TQElement *element) // ADDITIONAL Prints addressees as a li
     }
 }
 
-void printMsg(void *msg)
+void printMsg(void *msg) // ADDITIONAL
 {
     if (msg == NULL)
     {
@@ -89,7 +87,7 @@ void printQueue(TQueue *queue) // ADDITIONAL
     printAllMsgs(queue);
 }
 
-void removeEveryMsg(TQueue *queue, void *msg) // seems READY bez zamków
+void removeEveryMsg(TQueue *queue, void *msg) // ADDITIONAL
 {
     if (queue == NULL)
     {
@@ -231,7 +229,7 @@ void subscribe(TQueue *queue, pthread_t thread) // seems READY bez zamków
     }
 }
 
-void unsubscribe(TQueue *queue, pthread_t thread) // co jeżeli msg straci wszystkich adresatów!
+void unsubscribe(TQueue *queue, pthread_t thread) // seems READY bez zamków
 {
     if (queue == NULL)
     {
@@ -289,7 +287,7 @@ void unsubscribe(TQueue *queue, pthread_t thread) // co jeżeli msg straci wszys
     }
 }
 
-void addMsg(TQueue *queue, void *msg) // seems READY bez zamków i waitowania
+void addMsg(TQueue *queue, void *msg)
 {
     if (queue == NULL)
     {
@@ -482,7 +480,7 @@ void removeMsg(TQueue *queue, void *msg) // seems READY bez zamków
     }
 }
 
-void setSize(TQueue *queue, int size)
+void setSize(TQueue *queue, int size) // seems READY bez zamków
 {
     if (size >= queue->msgs_count)
     {
