@@ -39,7 +39,9 @@ typedef struct TQueue
 
 void printAddressees(TQElement *element);
 
-void printMsgs(TQueue *queue);
+void printMsg(void *msg);
+
+void printAllMsgs(TQueue *queue);
 
 void printQueue(TQueue *queue);
 

@@ -6,7 +6,7 @@ void printAddressees(TQElement *element) // ADDITIONAL Prints addressees as a li
 {
     if (element == NULL)
     {
-        printf("printMsgs: error");
+        printf("printAllMsgs: error");
         return;
     }
 
@@ -21,11 +21,24 @@ void printAddressees(TQElement *element) // ADDITIONAL Prints addressees as a li
     }
 }
 
-void printMsgs(TQueue *queue) // ADDITIONAL Prints messages in the printQueue format
+void printMsg(void *msg)
+{
+    if (msg == NULL)
+    {
+        printf("NULL\n");
+        return;
+    }
+    
+    printf("%s <- get()\n", (char *)msg);
+
+    return;
+}
+
+void printAllMsgs(TQueue *queue) // ADDITIONAL Prints messages in the printQueue format
 {
     if (queue == NULL)
     {
-        printf("printMsgs: error");
+        printf("printAllMsgs: error");
         return;
     }
 
@@ -36,6 +49,8 @@ void printMsgs(TQueue *queue) // ADDITIONAL Prints messages in the printQueue fo
     {
         printf("\t\t%d. \"%s\"\taddr_size = %d, addr_count = %d, addressees: ", i + 1, (char *)pt->msg, pt->addr_size, pt->addr_count);
         printAddressees(pt);
+        printf(", next = ");
+        printMsg(pt->next);
         printf("\n");
         pt = pt->next;
     }
@@ -54,7 +69,7 @@ void printQueue(TQueue *queue) // ADDITIONAL
     printf("\tsize        -->\t%d\n", queue->size);
     printf("\thead        -->\t%p\n", queue->head);
     printf("\ttail        -->\t%p\n", queue->tail);
-    printf("\tsubs_size  -->\t%d\n", queue->subs_size);
+    printf("\tsubs_size   -->\t%d\n", queue->subs_size);
     printf("\tsubs_count  -->\t%d\n", queue->subs_count);
     
     printf("\tsubscribers -->\t");
@@ -71,7 +86,7 @@ void printQueue(TQueue *queue) // ADDITIONAL
 
     printf("\tmsgs_count  -->\t%d\n", queue->msgs_count);
     printf("\tmessages    -->\n");
-    printMsgs(queue);
+    printAllMsgs(queue);
 }
 
 void removeEveryMsg(TQueue *queue, void *msg) // seems READY bez zamków
@@ -379,6 +394,8 @@ void* getMsg(TQueue *queue, pthread_t thread)
 
             return msg;
         }
+
+        element = element->next;
     }
 
     return NULL;
