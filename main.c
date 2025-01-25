@@ -9,7 +9,7 @@
 
 #include "queue.h"
 
-int N = 1;
+int N = 3;
 
 typedef struct routineArg
 {
@@ -159,7 +159,7 @@ int main()
 
     for (int i = 0; i < N; i++)
     {
-        pthread_create(&th[i], NULL, userRoutine, (void *)&rou_arg[i]);
+        pthread_create(&th[i], NULL, userRoutine, &rou_arg[i]);
     }
 
     // Waiting for all threads to end
