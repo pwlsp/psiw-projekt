@@ -196,7 +196,7 @@ TQueue *createQueue(int size)
     }
 
     pthread_mutex_init(&queue->mx_queue, NULL);
-    pthread_mutex_init(&queue->mx_com, NULL);
+    // pthread_mutex_init(&queue->mx_com, NULL);
 
     return queue;
 }
