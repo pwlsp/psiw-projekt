@@ -53,22 +53,29 @@ void *userRoutine(void *_rou_arg)
     switch (num)
     {
     case 1:
-        usleep(1000000);
-        addMsg(queue, msg3);
+        subscribe(queue, myThreadID);
+        addMsg(queue, msg1);
         printQueue(queue);
-        usleep(500000);
+        unsubscribe(queue, myThreadID);
+        printQueue(queue);
+        addMsg(queue, msg2);
+        printQueue(queue);
+
+        // printQueue(queue);
+        // unsubscribe(queue, myThreadID);
+        // printQueue(queue);
+        // addMsg(queue, msg2);
+        // printQueue(queue);
 
         break;
     case 2:
-        subscribe(queue, myThreadID);
-        printQueue(queue);
-        printGet(getMsg(queue, myThreadID));
-        usleep(500000);
-
-        printQueue(queue);
 
         break;
     case 3:
+        // subscribe(queue, myThreadID);
+        // usleep(1000000);
+        // getMsg(queue, myThreadID);
+        
 
         break;
 
@@ -95,7 +102,7 @@ int main()
     // Initializing threads, mutexes and condition variables
     pthread_t th[N];
 
-    int qsize = 2;
+    int qsize = 3;
     TQueue *queue = createQueue(qsize);
 
     routineArg rou_arg[N];

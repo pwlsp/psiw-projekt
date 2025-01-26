@@ -11,9 +11,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-extern pthread_mutex_t mx_queue;
-extern pthread_cond_t cond_new_message, cond_free_space;
-
 // Structures:
 
 typedef struct TQElement
@@ -27,6 +24,9 @@ typedef struct TQElement
 
 typedef struct TQueue
 {
+    pthread_mutex_t mx_queue;
+    // pthread_mutex_t mx_com;
+    pthread_cond_t cond_new_message, cond_free_space;
     int size;
     int msgs_count;
     int subs_count;

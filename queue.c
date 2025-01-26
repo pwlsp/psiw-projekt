@@ -1,18 +1,6 @@
 #include "queue.h"
 
-// ===============================================
-//
-//  -   sprawdzić na koniec, czy przy tworzeniu
-//      queue wszystko jest w porządku (mutex)
-//
-//  -   ...
-//
-// ===============================================
-
-pthread_mutex_t mx_queue, mx_com;
-pthread_cond_t cond_new_message, cond_free_space;
-
-void printAddressees(TQElement *element) // ADDITIONAL Prints addressees as a list
+void printAddressees(TQElement *element)
 {
     if (element == NULL)
     {
@@ -31,7 +19,7 @@ void printAddressees(TQElement *element) // ADDITIONAL Prints addressees as a li
     }
 }
 
-void printMsg(void *msg) // ADDITIONAL
+void printMsg(void *msg)
 {
     if (msg == NULL)
     {
@@ -45,10 +33,8 @@ void printMsg(void *msg) // ADDITIONAL
     return;
 }
 
-void printGet(void *msg) // ADDITIONAL
+void printGet(void *msg)
 {
-    pthread_mutex_lock(&mx_queue);
-
     if (msg == NULL)
     {
         printf("NULL\n");
@@ -57,12 +43,10 @@ void printGet(void *msg) // ADDITIONAL
 
     printf("%s <- getMsg()\n", (char *)msg);
 
-    pthread_mutex_unlock(&mx_queue);
-
     return;
 }
 
-void printAllMsgs(TQueue *queue) // ADDITIONAL Prints messages in the printQueue format
+void printAllMsgs(TQueue *queue)
 {
     if (queue == NULL)
     {
@@ -78,7 +62,7 @@ void printAllMsgs(TQueue *queue) // ADDITIONAL Prints messages in the printQueue
         printf("\t\t%d. \"%s\"\taddr_size = %d, addr_count = %d, addressees: ", i + 1, (char *)pt->msg, pt->addr_size, pt->addr_count);
         printAddressees(pt);
         printf(", next = ");
-        if(pt->next != NULL)
+        if (pt->next != NULL)
         {
             printMsg(pt->next->msg);
         }
@@ -93,7 +77,7 @@ void printAllMsgs(TQueue *queue) // ADDITIONAL Prints messages in the printQueue
     printf("\n");
 }
 
-void printQueue(TQueue *queue) // ADDITIONAL
+void printQueue(TQueue *queue)
 {
     if (queue == NULL)
     {
@@ -101,7 +85,7 @@ void printQueue(TQueue *queue) // ADDITIONAL
         return;
     }
 
-    pthread_mutex_lock(&mx_queue);
+    pthread_mutex_lock(&queue->mx_queue);
 
     printf("\nPrinting TQueue variables:\n");
     printf("\tsize        -->\t%d\n", queue->size);
@@ -125,10 +109,10 @@ void printQueue(TQueue *queue) // ADDITIONAL
     printf("\tmsgs_count  -->\t%d\n", queue->msgs_count);
     printf("\tmessages    -->\n");
     printAllMsgs(queue);
-    pthread_mutex_unlock(&mx_queue);
+    pthread_mutex_unlock(&queue->mx_queue);
 }
 
-void removeEveryMsg(TQueue *queue, void *msg) // ADDITIONAL
+void removeEveryMsg(TQueue *queue, void *msg)
 {
     if (queue == NULL)
     {
@@ -183,11 +167,14 @@ void removeEveryMsg(TQueue *queue, void *msg) // ADDITIONAL
     }
 }
 
-TQueue *createQueue(int size) // READY - tu chyba nie potrzeba zamków co nie?
+
+
+TQueue *createQueue(int size)
 {
     TQueue *queue = (TQueue *)malloc(sizeof(TQueue));
     if (queue == NULL)
     {
+        printf("createQueue: Memory allocation error\n");
         return NULL;
     }
     queue->size = size;
@@ -199,6 +186,7 @@ TQueue *createQueue(int size) // READY - tu chyba nie potrzeba zamków co nie?
     queue->subscribers = (pthread_t *)malloc(queue->subs_size * sizeof(pthread_t));
     if (queue->subscribers == NULL)
     {
+        printf("createQueue: Memory allocation error\n");
         free(queue);
         return NULL;
     }
@@ -207,10 +195,13 @@ TQueue *createQueue(int size) // READY - tu chyba nie potrzeba zamków co nie?
         queue->subscribers[i] = 0;
     }
 
+    pthread_mutex_init(&queue->mx_queue, NULL);
+    pthread_mutex_init(&queue->mx_com, NULL);
+
     return queue;
 }
 
-void destroyQueue(TQueue *queue) // seems READY bez zamków
+void destroyQueue(TQueue *queue)
 {
     if (queue == NULL)
     {
@@ -218,6 +209,8 @@ void destroyQueue(TQueue *queue) // seems READY bez zamków
     }
 
     TQElement *element = queue->head;
+
+    pthread_mutex_lock(&queue->mx_queue);
 
     while (element != NULL)
     {
@@ -231,7 +224,7 @@ void destroyQueue(TQueue *queue) // seems READY bez zamków
     free(queue);
 }
 
-void subscribe(TQueue *queue, pthread_t thread) // seems READY bez zamków
+void subscribe(TQueue *queue, pthread_t thread)
 {
     if (queue == NULL)
     {
@@ -239,6 +232,9 @@ void subscribe(TQueue *queue, pthread_t thread) // seems READY bez zamków
     }
 
     int already_there = 0;
+
+    pthread_mutex_lock(&queue->mx_queue);
+
     for (int i = 0; i < queue->subs_count; i++)
     {
         if (queue->subscribers[i] == thread)
@@ -263,15 +259,16 @@ void subscribe(TQueue *queue, pthread_t thread) // seems READY bez zamków
             queue->subscribers[queue->subs_count] = thread;
             ++queue->subs_count;
         }
-    }
-
+    } 
     else
     {
         printf("The thread is already subscribed.\n");
     }
+
+    pthread_mutex_unlock(&queue->mx_queue);
 }
 
-void unsubscribe(TQueue *queue, pthread_t thread) // seems READY bez zamków
+void unsubscribe(TQueue *queue, pthread_t thread)
 {
     if (queue == NULL)
     {
@@ -279,6 +276,9 @@ void unsubscribe(TQueue *queue, pthread_t thread) // seems READY bez zamków
     }
 
     int is_there = 0;
+
+    pthread_mutex_lock(&queue->mx_queue);
+
     for (int i = 0; i < queue->subs_count; i++)
     {
         if (queue->subscribers[i] == thread)
@@ -297,6 +297,7 @@ void unsubscribe(TQueue *queue, pthread_t thread) // seems READY bez zamków
         --queue->subs_count;
 
         TQElement *element = queue->head;
+        TQElement *prev_element;
         while (element != NULL) // Checking every element if it had the removed subscriber in its addressees
         {
             int is_there2 = 0;
@@ -318,8 +319,44 @@ void unsubscribe(TQueue *queue, pthread_t thread) // seems READY bez zamków
             {
                 element->addressees[element->addr_count - 1] = 0;
                 --element->addr_count;
+
+                if (element->addr_count == 0)
+                {
+                    if (element == queue->head) // If the message is the head
+                    {
+                        queue->head = element->next;
+
+                        free(element->addressees);
+                        free(element);
+
+                        --queue->msgs_count;
+
+                        if (queue->msgs_count == 0) // Checking if the head was the only message and if the queue is empty now
+                        {
+                            queue->tail = NULL;
+                        }
+                    }
+                    else
+                    {
+                        if (element == queue->tail) // Checking if we remove the last message
+                        {
+                            queue->tail = prev_element;
+                        }
+
+                        prev_element->next = element->next;
+
+                        free(element->addressees);
+                        free(element);
+
+                        --queue->msgs_count;
+                    }
+                    // pthread_mutex_lock(&queue->mx_com);
+                    pthread_cond_signal(&queue->cond_free_space);
+                    // pthread_mutex_unlock(&queue->mx_com);
+                }
             }
 
+            prev_element = element;
             element = element->next;
         }
     }
@@ -327,6 +364,8 @@ void unsubscribe(TQueue *queue, pthread_t thread) // seems READY bez zamków
     {
         printf("The thread was not subscribed.\n");
     }
+
+    pthread_mutex_unlock(&queue->mx_queue);
 }
 
 void addMsg(TQueue *queue, void *msg)
@@ -336,22 +375,24 @@ void addMsg(TQueue *queue, void *msg)
         return;
     }
 
-    pthread_mutex_lock(&mx_queue);
+    pthread_mutex_lock(&queue->mx_queue);
 
     while (queue->msgs_count >= queue->size) // Checking if there is free space for a message
     {
         printf("addMsg: Waiting...\n");
-        pthread_mutex_lock(&mx_com);
-        pthread_mutex_unlock(&mx_queue);
-        pthread_cond_wait(&cond_free_space, &mx_com);
-        pthread_mutex_lock(&mx_queue);
-        pthread_mutex_unlock(&mx_com);
+        // pthread_mutex_lock(&queue->mx_com);
+        // pthread_mutex_unlock(&queue->mx_queue);
+        // pthread_cond_wait(&queue->cond_free_space, &queue->mx_com);
+        // pthread_mutex_lock(&queue->mx_queue);
+        // pthread_mutex_unlock(&queue->mx_com);
+
+        pthread_cond_wait(&queue->cond_free_space, &queue->mx_queue);
     }
 
     if (queue->subs_count == 0) // If there is no subscribers - exit
     {
         printf("addMsg: No subscribers\n");
-        pthread_mutex_unlock(&mx_queue);
+        pthread_mutex_unlock(&queue->mx_queue);
         return;
     }
 
@@ -359,7 +400,7 @@ void addMsg(TQueue *queue, void *msg)
     if (element == NULL)
     {
         printf("addMsg: Memory allocation error\n");
-        pthread_mutex_unlock(&mx_queue);
+        pthread_mutex_unlock(&queue->mx_queue);
         return;
     }
 
@@ -371,7 +412,7 @@ void addMsg(TQueue *queue, void *msg)
     {
         free(element);
         printf("addMsg: Memory allocation error\n");
-        pthread_mutex_unlock(&mx_queue);
+        pthread_mutex_unlock(&queue->mx_queue);
         return;
     }
 
@@ -395,14 +436,13 @@ void addMsg(TQueue *queue, void *msg)
     queue->tail = element;
     queue->msgs_count += 1;
 
+    // pthread_mutex_lock(&queue->mx_com);
+    pthread_cond_signal(&queue->cond_new_message);
+    // pthread_mutex_unlock(&queue->mx_com);
 
-    pthread_mutex_lock(&mx_com);
-    pthread_cond_signal(&cond_new_message);
-    pthread_mutex_unlock(&mx_com);
-    
     printf("addMsg: Message added\n");
-    
-    pthread_mutex_unlock(&mx_queue);
+
+    pthread_mutex_unlock(&queue->mx_queue);
 }
 
 void *getMsg(TQueue *queue, pthread_t thread)
@@ -414,7 +454,7 @@ void *getMsg(TQueue *queue, pthread_t thread)
 
     int is_subscribed = 0;
 
-    pthread_mutex_lock(&mx_queue);
+    pthread_mutex_lock(&queue->mx_queue);
 
     for (int i = 0; i < queue->subs_count; i++) // Checking if the thread is subscribed
     {
@@ -427,13 +467,14 @@ void *getMsg(TQueue *queue, pthread_t thread)
 
     if (is_subscribed == 0) // If the thread is not subscribed - return NULL and quit
     {
-        pthread_mutex_unlock(&mx_queue);
+        pthread_mutex_unlock(&queue->mx_queue);
         return NULL;
     }
 
-    while(1) // Loop, because we want to search for the message every time there is a new one until we find one
+    while (1) // Loop, because we want to search for the message every time there is a new one until we find one
     {
         TQElement *element = queue->head;
+        TQElement *prev_element;
 
         while (element != NULL) // Checking every element if it has a message for this thread
         {
@@ -460,29 +501,59 @@ void *getMsg(TQueue *queue, pthread_t thread)
 
                 if (element->addr_count == 0) // If it was the last addressee, we delete the message and send a signal about a new free space
                 {
-                    removeMsg(queue, msg);
-                    pthread_mutex_lock(&mx_com);
-                    pthread_cond_signal(&cond_free_space);
-                    pthread_mutex_unlock(&mx_com);
+                    if (element == queue->head) // If the message is the head
+                    {
+                        queue->head = element->next;
+
+                        free(element->addressees);
+                        free(element);
+
+                        --queue->msgs_count;
+
+                        if (queue->msgs_count == 0) // Checking if the head was the only message and if the queue is empty now
+                        {
+                            queue->tail = NULL;
+                        }
+                    }
+                    else
+                    {
+                        if (element == queue->tail) // Checking if we remove the last message
+                        {
+                            queue->tail = prev_element;
+                        }
+
+                        prev_element->next = element->next;
+
+                        free(element->addressees);
+                        free(element);
+
+                        --queue->msgs_count;
+                    }
+                    // pthread_mutex_lock(&queue->mx_com);
+                    pthread_cond_signal(&queue->cond_free_space);
+                    // pthread_mutex_unlock(&queue->mx_com);
                 }
 
-                pthread_mutex_unlock(&mx_queue);
+                pthread_mutex_unlock(&queue->mx_queue);
                 return msg;
             }
 
+            prev_element = element;
             element = element->next;
         }
-        
+
         printf("getMsg: Waiting...\n");
-        pthread_mutex_lock(&mx_com);
-        pthread_mutex_unlock(&mx_queue);
-        pthread_cond_wait(&cond_new_message, &mx_com);
-        pthread_mutex_lock(&mx_queue);
-        pthread_mutex_unlock(&mx_com);
+        // pthread_mutex_lock(&queue->mx_com);
+        // pthread_mutex_unlock(&queue->mx_queue);
+        // pthread_cond_wait(&queue->cond_new_message, &queue->mx_com);
+        // pthread_mutex_lock(&queue->mx_queue);
+        // pthread_mutex_unlock(&queue->mx_com);
+
+        pthread_cond_wait(&queue->cond_new_message, &queue->mx_queue);
     }
 }
 
-int getAvailable(TQueue *queue, pthread_t thread) // seems READY bez zamków
+int getAvailable(TQueue *queue, pthread_t thread)
 {
     if (queue == NULL)
     {
@@ -490,6 +561,9 @@ int getAvailable(TQueue *queue, pthread_t thread) // seems READY bez zamków
     }
 
     int available = 0;
+
+    pthread_mutex_lock(&queue->mx_queue);
+
     TQElement *element = queue->head;
 
     while (element != NULL)
@@ -505,10 +579,12 @@ int getAvailable(TQueue *queue, pthread_t thread) // seems READY bez zamków
         element = element->next;
     }
 
+    pthread_mutex_unlock(&queue->mx_queue);
+
     return available;
 }
 
-void removeMsg(TQueue *queue, void *msg) // seems READY bez zamków
+void removeMsg(TQueue *queue, void *msg)
 {
     if (queue == NULL)
     {
@@ -519,6 +595,8 @@ void removeMsg(TQueue *queue, void *msg) // seems READY bez zamków
     {
         return;
     }
+
+    pthread_mutex_lock(&queue->mx_queue);
 
     if (queue->head->msg == msg) // If the message is the head
     {
@@ -534,6 +612,14 @@ void removeMsg(TQueue *queue, void *msg) // seems READY bez zamków
         {
             queue->tail = NULL;
         }
+
+        printf("removeMsg: Message removed (head)\n");
+
+        // pthread_mutex_lock(&queue->mx_com);
+        pthread_cond_signal(&queue->cond_free_space);
+        // pthread_mutex_unlock(&queue->mx_com);
+        pthread_mutex_unlock(&queue->mx_queue);
+
         return;
     }
 
@@ -556,15 +642,35 @@ void removeMsg(TQueue *queue, void *msg) // seems READY bez zamków
 
             --queue->msgs_count;
 
+            printf("removeMsg: Message removed (not head)\n");
+
+            // pthread_mutex_lock(&queue->mx_com);
+            pthread_cond_signal(&queue->cond_free_space);
+            // pthread_mutex_unlock(&queue->mx_com);
+            pthread_mutex_unlock(&queue->mx_queue);
+
             return;
         }
 
         element = element->next;
     }
+
+    printf("removeMsg: There is no such message\n");
+
+    pthread_mutex_unlock(&queue->mx_queue);
+
+    return;
 }
 
-void setSize(TQueue *queue, int size) // seems READY bez zamków
+void setSize(TQueue *queue, int size)
 {
+    if (queue == NULL)
+    {
+        return;
+    }
+
+    pthread_mutex_lock(&queue->mx_queue);
+
     if (size >= queue->msgs_count)
     {
         queue->size = size;
@@ -595,4 +701,8 @@ void setSize(TQueue *queue, int size) // seems READY bez zamków
             element = next;
         }
     }
+
+    printf("setSize: Size changed\n");
+
+    pthread_mutex_unlock(&queue->mx_queue);
 }
