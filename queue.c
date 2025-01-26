@@ -5,7 +5,7 @@ TQueue *createQueue(int size)
     TQueue *queue = (TQueue *)malloc(sizeof(TQueue));
     if (queue == NULL)
     {
-        printf("createQueue: Memory allocation error\n");
+        // printf("createQueue: Memory allocation error\n");
         return NULL;
     }
     queue->size = size;
@@ -17,7 +17,7 @@ TQueue *createQueue(int size)
     queue->subscribers = (pthread_t *)malloc(queue->subs_size * sizeof(pthread_t));
     if (queue->subscribers == NULL)
     {
-        printf("createQueue: Memory allocation error\n");
+        // printf("createQueue: Memory allocation error\n");
         free(queue);
         return NULL;
     }
@@ -96,11 +96,11 @@ void subscribe(TQueue *queue, pthread_t thread)
             queue->subscribers[queue->subs_count] = thread;
             ++queue->subs_count;
         }
-        printf("subscribe: The thread has subscribed successfully\n");
+        // printf("subscribe: The thread has subscribed successfully\n");
     }
     else
     {
-        printf("subscribe: The thread has already subscribed\n");
+        // printf("subscribe: The thread has already subscribed\n");
     }
 
     pthread_mutex_unlock(&queue->mx_queue);
@@ -198,11 +198,11 @@ void unsubscribe(TQueue *queue, pthread_t thread)
             element = element->next;
         }
 
-        printf("unsubscribe: The thread has unsubscribed successfully\n");
+        // printf("unsubscribe: The thread has unsubscribed successfully\n");
     }
     else
     {
-        printf("unsubscribe: The thread has not subscribed\n");
+        // printf("unsubscribe: The thread has not subscribed\n");
     }
 
     pthread_mutex_unlock(&queue->mx_queue);
@@ -212,7 +212,7 @@ void addMsg(TQueue *queue, void *msg)
 {
     if (queue == NULL)
     {
-        printf("addMsg: queue is NULL\n");
+        // printf("addMsg: queue is NULL\n");
         return;
     }
 
@@ -220,13 +220,13 @@ void addMsg(TQueue *queue, void *msg)
 
     while (queue->msgs_count >= queue->size) // Checking if there is free space for a message
     {
-        printf("addMsg: Waiting...\n");
+        // printf("addMsg: Waiting...\n");
         pthread_cond_wait(&queue->cond_free_space, &queue->mx_queue);
     }
 
     if (queue->subs_count == 0) // If there is no subscribers - exit
     {
-        printf("addMsg: No subscribers\n");
+        // printf("addMsg: No subscribers\n");
         pthread_mutex_unlock(&queue->mx_queue);
         return;
     }
@@ -234,7 +234,7 @@ void addMsg(TQueue *queue, void *msg)
     TQElement *element = (TQElement *)malloc(sizeof(TQElement));
     if (element == NULL)
     {
-        printf("addMsg: Memory allocation error\n");
+        // printf("addMsg: Memory allocation error\n");
         pthread_mutex_unlock(&queue->mx_queue);
         return;
     }
@@ -246,7 +246,7 @@ void addMsg(TQueue *queue, void *msg)
     if (element->addressees == NULL)
     {
         free(element);
-        printf("addMsg: Memory allocation error\n");
+        // printf("addMsg: Memory allocation error\n");
         pthread_mutex_unlock(&queue->mx_queue);
         return;
     }
@@ -273,7 +273,7 @@ void addMsg(TQueue *queue, void *msg)
 
     pthread_cond_broadcast(&queue->cond_new_message);
 
-    printf("addMsg: Message added\n");
+    // printf("addMsg: Message added\n");
 
     pthread_mutex_unlock(&queue->mx_queue);
 }
@@ -300,7 +300,7 @@ void *getMsg(TQueue *queue, pthread_t thread)
 
     if (is_subscribed == 0) // If the thread is not subscribed - return NULL and quit
     {
-        printf("getMsg: The thread is not subscribed\n");
+        // printf("getMsg: The thread is not subscribed\n");
         pthread_mutex_unlock(&queue->mx_queue);
         return NULL;
     }
@@ -366,7 +366,7 @@ void *getMsg(TQueue *queue, pthread_t thread)
                     pthread_cond_signal(&queue->cond_free_space);
                 }
 
-                printf("getMsg: Message received\n");
+                // printf("getMsg: Message received\n");
                 pthread_mutex_unlock(&queue->mx_queue);
                 return msg;
             }
@@ -375,7 +375,7 @@ void *getMsg(TQueue *queue, pthread_t thread)
             element = element->next;
         }
 
-        printf("getMsg: Waiting...\n");
+        // printf("getMsg: Waiting...\n");
 
         pthread_cond_wait(&queue->cond_new_message, &queue->mx_queue);
     }
@@ -423,7 +423,7 @@ void removeMsg(TQueue *queue, void *msg)
 
     if (queue->msgs_count <= 0) // If the queue is empty
     {
-        printf("removeMsg: There is no such message\n");
+        // printf("removeMsg: There is no such message\n");
         return;
     }
 
@@ -444,7 +444,7 @@ void removeMsg(TQueue *queue, void *msg)
             queue->tail = NULL;
         }
 
-        printf("removeMsg: Message removed (head)\n");
+        // printf("removeMsg: Message removed (head)\n");
 
         pthread_cond_signal(&queue->cond_free_space);
         pthread_mutex_unlock(&queue->mx_queue);
@@ -471,7 +471,7 @@ void removeMsg(TQueue *queue, void *msg)
 
             --queue->msgs_count;
 
-            printf("removeMsg: Message removed (not head)\n");
+            // printf("removeMsg: Message removed (not head)\n");
 
             pthread_cond_signal(&queue->cond_free_space);
             pthread_mutex_unlock(&queue->mx_queue);
@@ -482,7 +482,7 @@ void removeMsg(TQueue *queue, void *msg)
         element = element->next;
     }
 
-    printf("removeMsg: There is no such message\n");
+    // printf("removeMsg: There is no such message\n");
 
     pthread_mutex_unlock(&queue->mx_queue);
 
@@ -501,7 +501,7 @@ void setSize(TQueue *queue, int size)
     if (size >= queue->msgs_count)
     {
         queue->size = size;
-        printf("setSize: Size changed\n");
+        // printf("setSize: Size changed\n");
         pthread_cond_signal(&queue->cond_free_space);
         pthread_mutex_unlock(&queue->mx_queue);
         return;
@@ -524,13 +524,16 @@ void setSize(TQueue *queue, int size)
         queue->head = element;
     }
 
-    printf("setSize: Size changed\n");
+    // printf("setSize: Size changed\n");
 
     pthread_mutex_unlock(&queue->mx_queue);
 }
 
+// ============================================
 // Utility functions: (not used in the problem)
+// ============================================
 
+/*
 void printAddressees(TQElement *element)
 {
     if (element == NULL)
@@ -696,3 +699,4 @@ void removeEveryMsg(TQueue *queue, void *msg)
         element = element->next;
     }
 }
+*/

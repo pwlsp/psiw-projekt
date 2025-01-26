@@ -64,7 +64,8 @@ void *userRoutine(void *_rou_arg)
     case 2:
         getMsg(queue, myThreadID);
         subscribe(queue, myThreadID);
-        printf("getAvailable: %d\n", getAvailable(queue, myThreadID));
+        // printf("getAvailable: %d\n", getAvailable(queue, myThreadID));
+        getAvailable(queue, myThreadID);
         getMsg(queue, myThreadID);
         addMsg(queue, msg2);        
         addMsg(queue, msg2);        
@@ -81,14 +82,17 @@ void *userRoutine(void *_rou_arg)
         addMsg(queue, msg3);
         addMsg(queue, msg3);
         addMsg(queue, msg3);
-        printf("getAvailable: %d\n", getAvailable(queue, myThreadID));
+        // printf("getAvailable: %d\n", getAvailable(queue, myThreadID));
+        getAvailable(queue, myThreadID);
         setSize(queue, 1);
-        printf("getAvailable: %d\n", getAvailable(queue, myThreadID));
+        // printf("getAvailable: %d\n", getAvailable(queue, myThreadID));
+        getAvailable(queue, myThreadID);
         removeMsg(queue, msg1);
-        printf("getAvailable: %d\n", getAvailable(queue, myThreadID));
+        // printf("getAvailable: %d\n", getAvailable(queue, myThreadID));
+        getAvailable(queue, myThreadID);
         removeMsg(queue, msg3);
-        printf("getAvailable: %d\n", getAvailable(queue, myThreadID));
-
+        // printf("getAvailable: %d\n", getAvailable(queue, myThreadID));
+        getAvailable(queue, myThreadID);
 
         break;
 
