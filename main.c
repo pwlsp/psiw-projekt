@@ -53,29 +53,42 @@ void *userRoutine(void *_rou_arg)
     switch (num)
     {
     case 1:
-        subscribe(queue, myThreadID);
+        usleep(300000);
         addMsg(queue, msg1);
-        printQueue(queue);
-        unsubscribe(queue, myThreadID);
-        printQueue(queue);
-        addMsg(queue, msg2);
-        printQueue(queue);
-
-        // printQueue(queue);
-        // unsubscribe(queue, myThreadID);
-        // printQueue(queue);
-        // addMsg(queue, msg2);
-        // printQueue(queue);
+        sleep(1);
+        addMsg(queue, msg1);
+        sleep(3);
+        setSize(queue, 5);
 
         break;
     case 2:
+        getMsg(queue, myThreadID);
+        subscribe(queue, myThreadID);
+        printf("getAvailable: %d\n", getAvailable(queue, myThreadID));
+        getMsg(queue, myThreadID);
+        addMsg(queue, msg2);        
+        addMsg(queue, msg2);        
+        addMsg(queue, msg2); 
+        sleep(1);
+        unsubscribe(queue, myThreadID);
+        sleep(1);
 
         break;
     case 3:
-        // subscribe(queue, myThreadID);
-        // usleep(1000000);
-        // getMsg(queue, myThreadID);
-        
+        sleep(3);
+        subscribe(queue, myThreadID);
+        addMsg(queue, msg3);
+        addMsg(queue, msg3);
+        addMsg(queue, msg3);
+        addMsg(queue, msg3);
+        printf("getAvailable: %d\n", getAvailable(queue, myThreadID));
+        setSize(queue, 1);
+        printf("getAvailable: %d\n", getAvailable(queue, myThreadID));
+        removeMsg(queue, msg1);
+        printf("getAvailable: %d\n", getAvailable(queue, myThreadID));
+        removeMsg(queue, msg3);
+        printf("getAvailable: %d\n", getAvailable(queue, myThreadID));
+
 
         break;
 

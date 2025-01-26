@@ -1,12 +1,6 @@
 #ifndef LCL_QUEUE_H
 #define LCL_QUEUE_H
 
-// ==============================================
-//
-//  Version 1.1, 2025-01-16
-//
-// ==============================================
-
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,19 +30,7 @@ typedef struct TQueue
     pthread_t *subscribers;
 } TQueue;
 
-// Declarations:
-
-void printAddressees(TQElement *element);
-
-void printMsg(void *msg);
-
-void printGet(void *msg);
-
-void printAllMsgs(TQueue *queue);
-
-void printQueue(TQueue *queue);
-
-void removeEveryMsg(TQueue *queue, void *msg);
+// Functions:
 
 TQueue* createQueue(int size);
 
@@ -67,5 +49,19 @@ int getAvailable(TQueue *queue, pthread_t thread);
 void removeMsg(TQueue *queue, void *msg);
 
 void setSize(TQueue *queue, int size);
+
+// Utility functions: (not used in the problem)
+
+void printAddressees(TQElement *element);
+
+void printMsg(void *msg);
+
+void printGet(void *msg);
+
+void printAllMsgs(TQueue *queue);
+
+void printQueue(TQueue *queue);
+
+void removeEveryMsg(TQueue *queue, void *msg);
 
 #endif //LCL_QUEUE_H
