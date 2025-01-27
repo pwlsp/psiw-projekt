@@ -97,7 +97,7 @@ We wszystkich rozpatrzonych sytuacjach skrajnych algorytm przebiega pomyślnie:
 Poniżej znajduje się wynik działania programu dla wątków utworzonych w pliku `main.c` (dla odkomentowanych operacji pisania na ekran).
 Skompilowano komendą:
 ``` bash
-gcc -pthread main.c queue.c
+gcc -pthread -Wall main.c queue.c
 ```
 
 ![](./przyklad_uzycia.png)
