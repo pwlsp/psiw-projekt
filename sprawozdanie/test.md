@@ -1,1 +1,1 @@
-o
+- [x] czemu to nie dziala
