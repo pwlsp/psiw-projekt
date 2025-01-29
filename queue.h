@@ -52,16 +52,16 @@ void setSize(TQueue *queue, int size);
 
 // Utility functions: (not used in the problem)
 
-// void printAddressees(TQElement *element);
+void printAddressees(TQElement *element);
 
-// void printMsg(void *msg);
+void printMsg(void *msg);
 
-// void printGet(void *msg);
+void printGet(void *msg);
 
-// void printAllMsgs(TQueue *queue);
+void printAllMsgs(TQueue *queue);
 
-// void printQueue(TQueue *queue);
+void printQueue(TQueue *queue);
 
-// void removeEveryMsg(TQueue *queue, void *msg);
+void removeEveryMsg(TQueue *queue, void *msg);
 
 #endif //LCL_QUEUE_H

@@ -88,10 +88,10 @@ void subscribe(TQueue *queue, pthread_t thread)
             queue->subscribers[queue->subs_count] = thread;
             ++queue->subs_count;
         }
-        else // If the array is too small - realloc() with bigger size
+        else // If the array is too small - realloc() with bigger size (*2)
         {
-            queue->subscribers = realloc(queue->subscribers, queue->subs_size + 1);
-            ++queue->subs_size;
+            queue->subscribers = realloc(queue->subscribers, (queue->subs_size * 2) * sizeof(pthread_t));
+            queue->subs_size = queue->subs_size * 2;
 
             queue->subscribers[queue->subs_count] = thread;
             ++queue->subs_count;

@@ -9,7 +9,7 @@
 
 #include "queue.h"
 
-int N = 3;
+int N = 10000;
 
 typedef struct routineArg
 {
@@ -53,53 +53,23 @@ void *userRoutine(void *_rou_arg)
     switch (num)
     {
     case 1:
-        usleep(300000);
-        addMsg(queue, msg1);
-        sleep(1);
-        addMsg(queue, msg1);
-        sleep(3);
-        setSize(queue, 5);
 
         break;
     case 2:
-        getMsg(queue, myThreadID);
-        subscribe(queue, myThreadID);
-        // printf("getAvailable: %d\n", getAvailable(queue, myThreadID));
-        getAvailable(queue, myThreadID);
-        getMsg(queue, myThreadID);
-        addMsg(queue, msg2);        
-        addMsg(queue, msg2);        
-        addMsg(queue, msg2); 
-        sleep(1);
-        unsubscribe(queue, myThreadID);
-        sleep(1);
 
         break;
     case 3:
-        sleep(3);
-        subscribe(queue, myThreadID);
-        addMsg(queue, msg3);
-        addMsg(queue, msg3);
-        addMsg(queue, msg3);
-        addMsg(queue, msg3);
-        // printf("getAvailable: %d\n", getAvailable(queue, myThreadID));
-        getAvailable(queue, myThreadID);
-        setSize(queue, 1);
-        // printf("getAvailable: %d\n", getAvailable(queue, myThreadID));
-        getAvailable(queue, myThreadID);
-        removeMsg(queue, msg1);
-        // printf("getAvailable: %d\n", getAvailable(queue, myThreadID));
-        getAvailable(queue, myThreadID);
-        removeMsg(queue, msg3);
-        // printf("getAvailable: %d\n", getAvailable(queue, myThreadID));
-        getAvailable(queue, myThreadID);
 
         break;
-
-    default:
+    
+    case 1000001:
         addMsg(queue, msg1);
         addMsg(queue, msg2);
         addMsg(queue, msg3);
+        break;
+
+    default:
+        subscribe(queue, myThreadID);
         break;
     }
 

@@ -1,2 +1,1 @@
 - [ ] tablica subskrybentów lepsza (cykliczny bufor), żeby usuwanie nie przesuwało wszystkiego o jedno w lewo
-- [ ] żeby tablica się nie zwiększała za każdym razem gdy przekroczy limit

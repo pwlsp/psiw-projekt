@@ -1,10 +1,4 @@
----
-title: Publish-subscribe
-subtitle: Programowanie systemowe i współbieżne
-author: Paweł Spychała 160157 \<<pawel.spychala@student.put.poznan.pl>\>
-date: v1.0, 2025-01-20
-lang: pl-PL
----
+Date: 29.01.2025<br>
 Paweł Spychała 160157
 
 Projekt jest dostępny w repozytorium pod adresem:  
@@ -16,6 +10,7 @@ Projekt zawiera dwie struktury danych: `TQElement` oraz `TQueue`.
 
 ## TQElement
 `TQElement` to struktura przechowująca pojedynczą wiadomość w kolejce `TQueue`.
+
 ```c
 typedef struct TQElement
 {
@@ -26,6 +21,7 @@ typedef struct TQElement
     struct TQElement *next;
 } TQElement;
 ```
+
 Opis zmiennych:
 - `msg` - wskaźnik typu `void` na teoretyczną wiadomość.
 - `addr_count` (od *addressee count*) - liczba całkowita przechowująca .liczbę adresatów danej wiadomości, zapisanych w tablicy `addressees`.
@@ -33,7 +29,9 @@ Opis zmiennych:
 - `next` - wskaźnik na następny element kolejki `TQueue`. Następny element jest typu `TQElement`.
 
 ## TQueue
+
 `TQueue` to struktura będąca kolejką przechowującą wiadomości w postaci zmiennych typu `void *`. Zmienne te są opakowane w strukturę `TQElement` opisaną powyżej. Wiadomości docelowo mogą być odebrane przez wątki, które "zasubskrybują" kolejkę `TQueue`. Jak w klasycznej kolejce - każdy jej element zawiera wskaźnik na następny, dzięki czemu zachowana jest spójność struktury. Sama struktura `TQueue` zawiera zmienne niezbędne do funkcjonowania kolejki i wykonywania na niej określonych operacji.
+
 ```c
 typedef struct TQueue
 {
@@ -85,6 +83,7 @@ Zaimplementowane funkcje nie pozwalają na wystąpienie zakleszczenia dwóch (lu
 Głodzenie również nie powinno wystąpić, gdyż wątki oczekujące na nową wiadomość w dalszym ciągu są subskrybentami kolejki, przez co dowolna dodana wiadomość wybudzi je. Wątki czekające na miejsce w kolejce również skorzystają z dowolnej okazji na zakończenie swojej operacji. Nie występuje priorytetyzowanie żadnego z wątków.
 
 ## Sytuacje skrajne
+
 We wszystkich rozpatrzonych sytuacjach skrajnych algorytm przebiega pomyślnie:
 - W przypadku gdy żaden wątek nie subskrybuje kolejki:
 	- Dodanie wiadomości nie następuje, gdyż nie miałaby odbiorców
@@ -93,7 +92,9 @@ We wszystkich rozpatrzonych sytuacjach skrajnych algorytm przebiega pomyślnie:
 - Dodawanie wiadomości do pełnej kolejki powoduje czekanie. Próba odbioru wiadomości, której nie ma powoduje czekanie.
 - Próba odbioru wiadomości przez wątek, który nie subskrybuje przebiega bez błędu.
 - Ponowna subskrypcja / unsubskrypcja nie powoduje dodatkowych zmian.
+
 # Przykład użycia
+
 Poniżej znajduje się wynik działania programu dla wątków utworzonych w pliku `main.c` (dla odkomentowanych operacji pisania na ekran).
 Skompilowano komendą:
 ``` bash
