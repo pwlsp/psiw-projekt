@@ -101,4 +101,4 @@ Skompilowano komendą:
 gcc -pthread -Wall main.c queue.c
 ```
 
-![](./sprawozdanie_przyklad.png)
+![](../sprawozdanie/sprawozdanie_przyklad.png)
