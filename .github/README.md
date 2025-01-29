@@ -1,1 +1,1 @@
-../sprawozdanie/Paweł_Spychała_160157_sprawozdanie.md
+../sprawozdanie/test.md
