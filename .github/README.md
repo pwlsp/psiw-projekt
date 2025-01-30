@@ -1,1 +1,0 @@
-../sprawozdanie/pawel_spychala_sprawozdanie.md

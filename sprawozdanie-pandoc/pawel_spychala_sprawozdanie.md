@@ -1,8 +1,14 @@
-Date: 29.01.2025<br>
+---
+title: Publish-subscribe
+subtitle: Programowanie systemowe i współbieżne
+author: Paweł Spychała 160157 \<<pawel.spychala@student.put.poznan.pl>\>
+date: v1.1, 2025-01-30
+lang: pl-PL
+---
 Paweł Spychała 160157
 
 Projekt jest dostępny w repozytorium pod adresem:  
-https://github.com/pwlsp/psiw-projekt.
+<https://github.com/pwlsp/psiw-projekt>
 
 # Struktury danych
 
@@ -23,6 +29,7 @@ typedef struct TQElement
 ```
 
 Opis zmiennych:
+
 - `msg` - wskaźnik typu `void` na teoretyczną wiadomość.
 - `addr_count` (od *addressee count*) - liczba całkowita przechowująca .liczbę adresatów danej wiadomości, zapisanych w tablicy `addressees`.
 - `addr_size` - liczba całkowita przechowująca aktualny (maksymalny) rozmiar dynamicznej tablicy `addressees`.
@@ -48,6 +55,7 @@ typedef struct TQueue
 ```
 
 Opis zmiennych:
+
 - `mx_queue` - mutex blokujący dostęp do ingerencji w strukturę `TQueue`.
 - `cond_new_message`, `cond_free_space` - zmienne warunkowe, odpowiadające za czekanie lub wysyłanie sygnału odpowiednio o: pojawieniu się nowej wiadomości w `TQueue`, oraz pojawieniu się wolnego miejsca na wiadomość w `TQueue`.
 - `size` - maksymalna ilość wiadomości jaką może pomieścić kolejka.
@@ -69,6 +77,7 @@ Zadanie zostało wykonane wyłącznie przy użyciu funkcji zawartych w zadanym p
 **Aktywne oczekiwanie:**
 
 Wątek-subskrybent może chcieć rozpocząć oczekiwanie w dwóch sytuacjach:
+
 1. Gdy chce dodać wiadomość do kolejki, lecz jest ona pełna.
 2. Gdu chce odebrać wiadomość z kolejki, lecz nie ma tam żadnej wiadomości przeznaczonej dla tego wątku
 
@@ -85,13 +94,14 @@ Głodzenie również nie powinno wystąpić, gdyż wątki oczekujące na nową w
 ## Sytuacje skrajne
 
 We wszystkich rozpatrzonych sytuacjach skrajnych algorytm przebiega pomyślnie:
+
 - W przypadku gdy żaden wątek nie subskrybuje kolejki:
 	- Dodanie wiadomości nie następuje, gdyż nie miałaby odbiorców
 	- Funkcja odsubskrybowania nic nie zmienia
 - Ustawienie wielkości kolejki na 0 działa poprawnie.
 - Dodawanie wiadomości do pełnej kolejki powoduje czekanie. Próba odbioru wiadomości, której nie ma powoduje czekanie.
 - Próba odbioru wiadomości przez wątek, który nie subskrybuje przebiega bez błędu.
-- Ponowna subskrypcja / unsubskrypcja nie powoduje dodatkowych zmian.
+- Ponowna subskrypcja / anulowanie subskrypcji nie powoduje dodatkowych zmian.
 
 # Przykład użycia
 
@@ -101,4 +111,4 @@ Skompilowano komendą:
 gcc -pthread -Wall main.c queue.c
 ```
 
-![](../sprawozdanie/sprawozdanie_przyklad.png)
+![](../sprawozdanie-pandoc/sprawozdanie_przyklad.png)
